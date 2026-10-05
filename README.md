@@ -1,58 +1,205 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pneumonia Detection
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Experimental web application that classifies chest X-rays as **NORMAL** or **PNEUMONIA**.
+The Laravel/Blade front end handles the upload and the UI; a standalone Python
+service owns the trained convolutional neural network and is called over HTTP.
 
-## About Laravel
+> **Not a medical device.** The predictions are for demonstration only and must not
+> be used for diagnosis. Uploaded radiographs are never persisted.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Architecture
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Two processes, two languages, one HTTP contract:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+Browser ──multipart──▶ Laravel (Blade UI + validation) ──multipart──▶ FastAPI ──▶ Keras CNN
+   ▲                          │                                          │
+   └──────── JSON ◀───────────┴──────────────── JSON ◀───────────────────┘
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- **Laravel** validates the upload, streams it to the service under a neutral
+  filename, validates the returned probabilities, and renders the result.
+- **FastAPI** decodes the image, applies the model's preprocessing contract, runs
+  the CNN, and returns one probability per configured class.
+- The model artifact is never loaded by PHP.
 
-## Contributing
+### Model contract
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Property | Value |
+| --- | --- |
+| Artifact | `inference-service/models/modelo_neumonia_cnn.keras` |
+| Input | grayscale, `150 × 150`, single channel |
+| Normalization | pixels scaled to `[0, 1]` (`div_255`) |
+| Output | one sigmoid scalar = `P(PNEUMONIA)`; `P(NORMAL) = 1 - scalar` |
+| Positive class | `PNEUMONIA` (label `1`) |
+| Negative class | `NORMAL` (label `0`) |
 
-## Code of Conduct
+## Requirements
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- PHP 8.4 with the `gd`, `curl` and `zip` extensions
+- Composer and Node.js 20+
+- Python 3.12
 
-## Security Vulnerabilities
+## Setup
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 1. Laravel application
 
-## License
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+npm run build          # or: npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 2. Inference service
+
+```bash
+cd inference-service
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Place the trained artifact at `inference-service/models/modelo_neumonia_cnn.keras`
+(the file is git-ignored). If your artifact lives elsewhere, point
+`ML_MODEL_PATH` at it.
+
+### 3. Run both
+
+Start the inference service first (defaults to port `8000`):
+
+```bash
+cd inference-service
+.venv/Scripts/uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Then the Laravel app on a different port, with the service URL configured:
+
+```bash
+ML_SERVICE_URL=http://127.0.0.1:8000 php artisan serve --port=8080
+```
+
+Open <http://127.0.0.1:8080>.
+
+You can check the service directly:
+
+```bash
+curl http://127.0.0.1:8000/health
+# {"status":"ok","model_loaded":true,"model_name":"modelo_neumonia_cnn"}
+```
+
+### Windows / Herd: "unable to create a temporary file"
+
+`php artisan serve` runs the PHP built-in server in **reload** mode, which
+replaces the server process environment with a whitelist that omits `TMP` and
+`TEMP`. On Windows with an empty `upload_tmp_dir`, PHP then falls back to
+`C:\Windows\Temp`, and every upload fails with:
+
+```
+PHP Request Startup: File upload error - unable to create a temporary file
+```
+
+Pick one of these fixes:
+
+- Start the server with `php artisan serve --no-reload` (the built-in server then
+  inherits the full environment). This also applies to `composer run dev`, whose
+  `server` process uses plain `artisan serve`.
+- Set `upload_tmp_dir` to a writable directory in the Herd `php.ini`.
+- Serve the app through a Herd site (php-fpm via nginx) instead of `artisan serve`.
+
+## Configuration
+
+Laravel reads these from `.env` via `config/inference.php`:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ML_SERVICE_URL` | `http://127.0.0.1:8000` | Base URL of the inference service |
+| `ML_SERVICE_PATH` | `/predict` | Prediction endpoint path |
+| `ML_SERVICE_CONNECT_TIMEOUT` | `5` | Connection timeout (seconds) |
+| `ML_SERVICE_TIMEOUT` | `30` | Response timeout (seconds) |
+| `ML_MAX_UPLOAD_KB` | `10240` | Maximum upload size |
+| `ML_MAX_DIMENSION` | `4096` | Maximum image width/height |
+| `ML_RATE_LIMIT` | `20` | Analyses allowed per client per window |
+| `ML_MODEL_NAME` | `modelo_neumonia_cnn` | Name reported back in the response |
+| `ML_PROBABILITY_TOLERANCE` | `0.01` | Accepted drift when probabilities must sum to 1 |
+
+The service reads its own `ML_*` variables (see `inference-service/.env.example`),
+including `ML_MODEL_PATH`, the `ML_INPUT_*` / `ML_NORMALIZATION` preprocessing
+contract, `ML_POSITIVE_CLASS` / `ML_NEGATIVE_CLASS`, and `ML_HOST` / `ML_PORT`.
+
+## HTTP API
+
+### Laravel
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/` | Analyzer page (bilingual ES/EN, light/dark) |
+| `POST` | `/analyze` | Upload `image` and receive a prediction (throttled) |
+| `GET` | `/locale/{locale}` | Switch the UI language (`en`, `es`) |
+
+Successful `/analyze` response:
+
+```json
+{
+  "success": true,
+  "prediction": {
+    "class": "PNEUMONIA",
+    "confidence": 0.93,
+    "model": "modelo_neumonia_cnn",
+    "probabilities": [
+      { "class": "NORMAL", "probability": 0.07, "percentage": 7.0 },
+      { "class": "PNEUMONIA", "probability": 0.93, "percentage": 93.0 }
+    ]
+  }
+}
+```
+
+Error responses use `{ "success": false, "error": { "code", "message", "fields"? } }`
+with codes `VALIDATION_ERROR` (422), `INVALID_MODEL_RESPONSE` (502),
+`MODEL_UNAVAILABLE` (503), `MODEL_TIMEOUT` (504), `RATE_LIMITED` (429),
+`SESSION_EXPIRED` (419) and `UNEXPECTED` (500).
+
+### Inference service
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Liveness and whether the model is loaded |
+| `POST` | `/predict` | Multipart `image` field; returns `class` and `probabilities` |
+
+The service reports `MODEL_UNAVAILABLE` (503) when the artifact is missing or
+fails to load, and `INVALID_IMAGE` (413/422) when the upload cannot be decoded.
+
+## Testing
+
+```bash
+# Laravel (Pest)
+php artisan test --compact
+
+# Inference service (pytest)
+cd inference-service
+.venv/Scripts/python -m pytest
+```
+
+## Replacing the model
+
+1. Drop the new `.keras` artifact into `inference-service/models/`.
+2. Update `ML_MODEL_PATH` (and `ML_MODEL_NAME`).
+3. Keep the preprocessing contract in sync: `ML_INPUT_WIDTH`, `ML_INPUT_HEIGHT`,
+   `ML_GRAYSCALE`, `ML_NORMALIZATION`, `ML_POSITIVE_CLASS`, `ML_NEGATIVE_CLASS`.
+4. Mirror those changes in Laravel's `config/inference.php` (`model` and
+   `classes` keys). A unit test asserts the class enum and this config stay in
+   sync, and the response DTO rejects probabilities that do not form a
+   distribution.
+
+## Privacy
+
+Uploads are read into memory (`php://temp`) and streamed to the service; nothing
+is written to disk, stored in the database, or logged with clinical data. The
+service receives a neutral filename rather than the one supplied by the client.

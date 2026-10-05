@@ -86,6 +86,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Supported Locales
+    |--------------------------------------------------------------------------
+    |
+    | Locales offered by the language selector. The visitor's choice is kept in
+    | the session, so it survives navigation without a user account.
+    |
+    */
+
+    'supported_locales' => ['en', 'es'],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

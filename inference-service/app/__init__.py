@@ -1,0 +1,1 @@
+"""Pneumonia inference service package."""
