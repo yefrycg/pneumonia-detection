@@ -17,6 +17,10 @@ return [
 
     'predict_path' => env('ML_SERVICE_PATH', '/predict'),
 
+    'recommend_path' => env('ML_SERVICE_RECOMMEND_PATH', '/recommend'),
+
+    'feedback_path' => env('ML_SERVICE_FEEDBACK_PATH', '/rl/feedback'),
+
     'health_path' => env('ML_SERVICE_HEALTH_PATH', '/health'),
 
     /*
@@ -33,6 +37,17 @@ return [
     'connect_timeout' => (int) env('ML_SERVICE_CONNECT_TIMEOUT', 5),
 
     'timeout' => (int) env('ML_SERVICE_TIMEOUT', 30),
+
+    /*
+     * The recommendation is a second, slower call: Qwen runs on CPU and the
+     * service may retry once before falling back. It must stay well above the
+     * prediction timeout so a slow LLM never looks like a failed prediction.
+     */
+    'recommendation_connect_timeout' => (int) env('ML_SERVICE_RECOMMEND_CONNECT_TIMEOUT', 5),
+
+    'recommendation_timeout' => (int) env('ML_SERVICE_RECOMMEND_TIMEOUT', 90),
+
+    'feedback_timeout' => (int) env('ML_SERVICE_FEEDBACK_TIMEOUT', 15),
 
     /*
     |--------------------------------------------------------------------------
@@ -67,6 +82,26 @@ return [
     */
 
     'rate_limit' => (int) env('ML_RATE_LIMIT', 20),
+
+    'recommendation_rate_limit' => (int) env('ML_RECOMMENDATION_RATE_LIMIT', 10),
+
+    'feedback_rate_limit' => (int) env('ML_FEEDBACK_RATE_LIMIT', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recommendation Contract
+    |--------------------------------------------------------------------------
+    |
+    | The LLM is asked for 200-600 characters. Only the minimum is enforced as
+    | a hard invariant: Laravel rejects a shorter text so a truncated sentence
+    | can never reach the interface, and the service falls back to reviewed
+    | copy before that happens.
+    |
+    */
+
+    'recommendation' => [
+        'min_chars' => (int) env('ML_RECOMMENDATION_MIN_CHARS', 200),
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -51,14 +51,28 @@
         </span>
     </label>
 
-        <div data-preview class="hidden flex-col gap-4">
+    <div data-preview class="hidden flex-col gap-4">
         <div class="flex flex-col gap-4 rounded-2xl border border-border bg-surface-raised p-4 shadow-panel sm:flex-row sm:items-start">
-            <img
-                data-preview-image
-                src=""
-                alt="{{ __('analyzer.upload.preview_alt') }}"
-                class="aspect-square w-full shrink-0 rounded-xl bg-surface-sunken object-contain sm:size-40"
-            >
+            <figure class="relative aspect-square w-full shrink-0 rounded-xl bg-surface-sunken overflow-hidden sm:size-48">
+                <img
+                    data-preview-image
+                    src=""
+                    alt="{{ __('analyzer.upload.preview_alt') }}"
+                    class="w-full h-full object-contain cursor-zoom-in transition-transform duration-200 hover:scale-[1.02]"
+                    data-lightbox-trigger
+                >
+                <button
+                    type="button"
+                    class="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-black/50 text-white opacity-0 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-2 focus:outline-offset-2 focus:outline-white"
+                    data-lightbox-trigger
+                    aria-label="{{ __('analyzer.upload.zoom_alt') }}"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-4" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </figure>
 
             <dl class="grid flex-1 grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                 <dt class="text-ink-subtle">{{ __('analyzer.upload.filename') }}</dt>

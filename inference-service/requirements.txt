@@ -8,5 +8,10 @@ pydantic-settings>=2.7,<3
 # with. tensorflow-cpu keeps the image small; swap for `tensorflow` to get GPU
 # support without any code change.
 tensorflow-cpu>=2.19,<2.21
+# The recommendation LLM runs on CPU through PyTorch. ``USE_TF=0`` is set in
+# app/llm.py before transformers is imported so it never probes the Keras 3 /
+# TensorFlow stack that already serves the CNN.
+torch>=2.6,<3
+transformers>=4.51,<5
 httpx>=0.28,<0.29
 pytest>=8.3,<9

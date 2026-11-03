@@ -52,6 +52,7 @@ export function createUploader({ container, config, messages, onChange }) {
     const sizeField = container.querySelector('[data-preview-size]');
     const dimensionsField = container.querySelector('[data-preview-dimensions]');
     const errorField = container.querySelector('[data-upload-error]');
+    const lightboxTriggers = container.querySelectorAll('[data-lightbox-trigger]');
 
     let selectedFile = null;
     let objectUrl = null;
@@ -105,7 +106,7 @@ export function createUploader({ container, config, messages, onChange }) {
     const accept = (file) => {
         const ext = normalizeExtension(extensionOf(file.name));
 
-        if (! config.acceptedExtensions.some((allowed) => normalizeExtension(allowed) === ext)) {
+        if (!config.acceptedExtensions.some((allowed) => normalizeExtension(allowed) === ext)) {
             showError(messages.wrongType.replace('%FORMATS%', config.formatsLabel));
 
             return false;
@@ -127,7 +128,7 @@ export function createUploader({ container, config, messages, onChange }) {
             return;
         }
 
-        if (! accept(file)) {
+        if (!accept(file)) {
             selectedFile = null;
             onChange(null);
 
@@ -138,8 +139,6 @@ export function createUploader({ container, config, messages, onChange }) {
 
         void renderPreview(file);
     };
-
-
 
     input.addEventListener('change', () => {
         select(input.files?.[0]);
@@ -169,6 +168,17 @@ export function createUploader({ container, config, messages, onChange }) {
 
         select(event.dataTransfer?.files?.[0]);
     });
+
+    // Lightbox triggers - delegate to the lightbox module
+    for (const trigger of lightboxTriggers) {
+        trigger.addEventListener('click', () => {
+            if (objectUrl) {
+                document.dispatchEvent(new CustomEvent('lightbox:open', {
+                    detail: { src: objectUrl, alt: previewImage.alt }
+                }));
+            }
+        });
+    }
 
     // Dropping anywhere outside the zone must not make the browser navigate
     // away from the page and lose the selection.

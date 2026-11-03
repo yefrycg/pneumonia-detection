@@ -36,5 +36,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('analysis', fn (Request $request): Limit => Limit::perMinute(
             (int) config('inference.rate_limit', 20)
         )->by('analysis|'.$request->ip()));
+
+        RateLimiter::for('recommendation', fn (Request $request): Limit => Limit::perMinute(
+            (int) config('inference.recommendation_rate_limit', 10)
+        )->by('recommendation|'.$request->ip()));
+
+        RateLimiter::for('feedback', fn (Request $request): Limit => Limit::perMinute(
+            (int) config('inference.feedback_rate_limit', 30)
+        )->by('feedback|'.$request->ip()));
     }
 }

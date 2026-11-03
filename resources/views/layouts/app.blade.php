@@ -64,5 +64,54 @@
             <p class="text-xs text-ink-subtle">{{ __('analyzer.footer.disclaimer') }}</p>
         </div>
     </footer>
+
+    <!-- Lightbox modal for image zoom -->
+    <div
+        id="lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="{{ __('analyzer.upload.zoom_alt') }}"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-sm"
+        data-lightbox
+    >
+        <button
+            type="button"
+            class="absolute top-4 right-4 z-10 grid size-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus:outline-2 focus:outline-offset-2 focus:outline-white"
+            data-lightbox-close
+            aria-label="{{ __('analyzer.lightbox.close') }}"
+        >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-6" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" />
+            </svg>
+        </button>
+        <button
+            type="button"
+            class="absolute left-4 z-10 grid size-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus:outline-2 focus:outline-offset-2 focus:outline-white hidden sm:block"
+            data-lightbox-prev
+            aria-label="{{ __('analyzer.lightbox.previous') }}"
+        >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-6" aria-hidden="true">
+                <path d="M15 18 9 12 15 6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+        <div class="relative max-h-[85vh] max-w-[90vw]">
+            <img
+                src=""
+                alt=""
+                class="max-h-[85vh] max-w-[90vw] object-contain"
+                data-lightbox-image
+            >
+        </div>
+        <button
+            type="button"
+            class="absolute right-4 z-10 grid size-12 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus:outline-2 focus:outline-offset-2 focus:outline-white hidden sm:block"
+            data-lightbox-next
+            aria-label="{{ __('analyzer.lightbox.next') }}"
+        >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-6" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
+    </div>
 </body>
 </html>

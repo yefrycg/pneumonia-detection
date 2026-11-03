@@ -3,10 +3,12 @@
 namespace App\Services\Inference;
 
 use App\Contracts\InferenceClient;
+use App\Enums\PredictionClass;
 use App\Exceptions\InferenceException;
 use App\Exceptions\InferenceServiceUnavailableException;
 use App\Exceptions\InferenceTimeoutException;
 use App\Exceptions\InvalidInferenceResponseException;
+use App\Exceptions\RecommendationFeedbackException;
 use App\Exceptions\UnreadableImageException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
@@ -62,6 +64,80 @@ final class HttpInferenceClient implements InferenceClient
         }
 
         return $this->interpret($response);
+    }
+
+    public function recommend(PredictionClass $class, float $confidence, string $locale): array
+    {
+        try {
+            $response = $this->http
+                ->connectTimeout((int) config('inference.recommendation_connect_timeout'))
+                ->timeout((int) config('inference.recommendation_timeout'))
+                ->acceptJson()
+                ->asJson()
+                ->post($this->endpoint('recommend_path'), [
+                    'class' => $class->value,
+                    'confidence' => $confidence,
+                    'locale' => $locale,
+                ]);
+        } catch (ConnectionException $exception) {
+            throw $this->translateConnectionFailure($exception, 'recommendation_timeout');
+        }
+
+        if ($response->successful()) {
+            return $this->decodePayload($response);
+        }
+
+        if ($response->serverError() || in_array($response->status(), [404, 429], true)) {
+            throw InferenceServiceUnavailableException::serverError($response->status());
+        }
+
+        /*
+         * The service validates the request again as an external boundary. A
+         * 4xx here means its answer cannot be used, never that the model failed
+         * a prediction, so it stays a malformed-response error.
+         */
+        throw InvalidInferenceResponseException::malformed("unexpected status {$response->status()}");
+    }
+
+    public function feedback(string $recommendationId, int $reward): array
+    {
+        try {
+            $response = $this->http
+                ->connectTimeout((int) config('inference.recommendation_connect_timeout'))
+                ->timeout((int) config('inference.feedback_timeout'))
+                ->acceptJson()
+                ->asJson()
+                ->post($this->endpoint('feedback_path'), [
+                    'recommendation_id' => $recommendationId,
+                    'reward' => $reward,
+                ]);
+        } catch (ConnectionException $exception) {
+            throw $this->translateConnectionFailure($exception, 'feedback_timeout');
+        }
+
+        $status = $response->status();
+
+        if ($response->successful()) {
+            return $this->decodePayload($response);
+        }
+
+        if ($status === 404) {
+            throw RecommendationFeedbackException::notFound();
+        }
+
+        if ($status === 409) {
+            throw RecommendationFeedbackException::alreadyRecorded();
+        }
+
+        if ($status === 422) {
+            throw RecommendationFeedbackException::rejected();
+        }
+
+        if ($response->serverError() || $status === 429) {
+            throw InferenceServiceUnavailableException::serverError($status);
+        }
+
+        throw InvalidInferenceResponseException::malformed("unexpected status {$status}");
     }
 
     private function endpoint(string $pathKey): string
@@ -149,10 +225,10 @@ final class HttpInferenceClient implements InferenceClient
         };
     }
 
-    private function translateConnectionFailure(ConnectionException $exception): InferenceException
+    private function translateConnectionFailure(ConnectionException $exception, string $timeoutKey = 'timeout'): InferenceException
     {
         if ($this->looksLikeTimeout($exception)) {
-            return InferenceTimeoutException::afterSeconds((int) config('inference.timeout'), $exception);
+            return InferenceTimeoutException::afterSeconds((int) config('inference.'.$timeoutKey), $exception);
         }
 
         return InferenceServiceUnavailableException::unreachable();

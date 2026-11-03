@@ -1,8 +1,10 @@
 import { initAnalyzer } from './analyzer';
 import { initThemeToggle } from './theme';
+import { initLightbox } from './lightbox';
 
 function boot() {
     initThemeToggle();
+    initLightbox();
 
     const root = document.querySelector('[data-analyzer]');
 

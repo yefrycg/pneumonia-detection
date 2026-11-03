@@ -39,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (InferenceException $exception, Request $request) {
-            if (! $request->is('analyze')) {
+            if (! $request->is('analyze', 'recommend', 'recommendation/*')) {
                 return false;
             }
 
@@ -53,7 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (ValidationException $exception, Request $request) {
-            if (! $request->is('analyze')) {
+            if (! $request->is('analyze', 'recommend', 'recommendation/*')) {
                 return false;
             }
 
@@ -68,7 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (ThrottleRequestsException $exception, Request $request) {
-            if (! $request->is('analyze')) {
+            if (! $request->is('analyze', 'recommend', 'recommendation/*')) {
                 return false;
             }
 
@@ -87,7 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (TokenMismatchException $exception, Request $request) {
-            if (! $request->is('analyze')) {
+            if (! $request->is('analyze', 'recommend', 'recommendation/*')) {
                 return false;
             }
 

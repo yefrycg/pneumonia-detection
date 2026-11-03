@@ -67,6 +67,31 @@ it('never exposes the inference service URL to the browser', function () {
     expect($response->getContent())->not->toContain((string) config('inference.url'));
 });
 
+it('renders the recommendation card with feedback and agent details', function () {
+    $this->get(route('analyzer.index'))
+        ->assertOk()
+        ->assertSee(__('analyzer.recommendation.heading'))
+        ->assertSee(__('analyzer.recommendation.feedback.prompt'))
+        ->assertSee(__('analyzer.recommendation.feedback.useful'))
+        ->assertSee(__('analyzer.recommendation.feedback.not_useful'))
+        ->assertSee(__('analyzer.recommendation.agent.heading'))
+        ->assertSee('data-recommendation', escape: false)
+        ->assertSee('data-feedback-up', escape: false)
+        ->assertSee('data-rl-ranking', escape: false)
+        ->assertSee(route('analyzer.recommend'), escape: false)
+        ->assertSee(route('analyzer.feedback'), escape: false);
+});
+
+it('localises the recommendation card', function () {
+    $this->get(route('locale.set', 'es'))->assertRedirect(route('analyzer.index'));
+
+    $this->get(route('analyzer.index'))
+        ->assertOk()
+        ->assertSee(__('analyzer.recommendation.heading', locale: 'es'))
+        ->assertSee(__('analyzer.recommendation.feedback.prompt', locale: 'es'))
+        ->assertSee(__('analyzer.recommendation.agent.heading', locale: 'es'));
+});
+
 it('keeps every element the analyzer script looks up inside the analyzer root', function () {
     $html = $this->get(route('analyzer.index'))->assertOk()->getContent();
 
@@ -95,6 +120,16 @@ it('keeps every element the analyzer script looks up inside the analyzer root', 
         'data-confidence',
         'data-model',
         'data-analyze-again',
+        'data-recommendation',
+        'data-recommendation-loading',
+        'data-recommendation-content',
+        'data-recommendation-text',
+        'data-source-badge',
+        'data-feedback-up',
+        'data-feedback-down',
+        'data-feedback-status',
+        'data-rl-details',
+        'data-rl-ranking',
     ];
 
     foreach ($hooks as $hook) {

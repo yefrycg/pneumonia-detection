@@ -44,6 +44,7 @@ Thumbs.db
 /inference-service/.env
 /inference-service/**/__pycache__/
 /inference-service/.pytest_cache/
+/inference-service/data/
 *.py[cod]
 
 # Uploaded radiographs are never persisted; this guards any accidental write.

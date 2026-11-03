@@ -55,48 +55,50 @@
             data-label-analyzing="{{ __('analyzer.analyzing') }}"
             data-label-unknown-dimensions="{{ __('analyzer.preview.unknown_dimensions') }}"
             data-tones="{{ json_encode($tones) }}"
-            class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+            class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start"
         >
-            <form
-                data-form
-                action="{{ $analysisEndpoint }}"
-                method="post"
-                enctype="multipart/form-data"
-                novalidate
-                class="flex flex-col gap-6 rounded-2xl border border-border bg-surface-raised p-5 shadow-panel sm:p-6"
-            >
-                @csrf
-
-                <div
-                    data-alert
-                    hidden
-                    role="alert"
-                    class="flex gap-3 rounded-xl border border-critical/30 bg-critical-soft p-4"
+            <div class="flex flex-col gap-6 lg:order-1">
+                <form
+                    data-form
+                    action="{{ $analysisEndpoint }}"
+                    method="post"
+                    enctype="multipart/form-data"
+                    novalidate
+                    class="flex flex-col gap-6 rounded-2xl border border-border bg-surface-raised p-5 shadow-panel sm:p-6"
                 >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="mt-0.5 size-5 shrink-0 text-critical" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 7.5V13m0 3.5h.01" stroke-linecap="round" />
-                    </svg>
-                    <p data-alert-message class="text-sm font-medium text-critical"></p>
-                </div>
+                    @csrf
 
-                <x-upload-dropzone :max-size-kb="$maxUploadKb" :accepted-extensions="$acceptedExtensions" />
+                    <div
+                        data-alert
+                        hidden
+                        role="alert"
+                        class="flex gap-3 rounded-xl border border-critical/30 bg-critical-soft p-4"
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="mt-0.5 size-5 shrink-0 text-critical" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7.5V13m0 3.5h.01" stroke-linecap="round" />
+                        </svg>
+                        <p data-alert-message class="text-sm font-medium text-critical"></p>
+                    </div>
 
+                    <x-upload-dropzone :max-size-kb="$maxUploadKb" :accepted-extensions="$acceptedExtensions" />
 
+                    <button
+                        type="submit"
+                        data-submit
+                        disabled
+                        class="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-accent-contrast transition-[background-color,opacity] hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-start"
+                    >
+                        <span data-spinner hidden class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true"></span>
+                        <span data-submit-label>{{ __('analyzer.analyze') }}</span>
+                    </button>
+                </form>
 
-                <button
-                    type="submit"
-                    data-submit
-                    disabled
-                    class="inline-flex w-full items-center justify-center gap-2.5 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-accent-contrast transition-[background-color,opacity] hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:self-start"
-                >
-                    <span data-spinner hidden class="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true"></span>
-                    <span data-submit-label>{{ __('analyzer.analyze') }}</span>
-                </button>
-            </form>
-
-            <div class="flex flex-col gap-4">
                 <x-prediction-result :classes="config('inference.classes')" />
+            </div>
+
+            <div class="flex flex-col gap-4 lg:order-2">
+                <x-recommendation class="w-full" />
             </div>
 
             <p class="sr-only" role="status" aria-live="polite" data-status>{{ __('analyzer.accessibility.status_region') }}</p>
