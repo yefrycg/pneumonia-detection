@@ -86,15 +86,6 @@
             </dl>
         </div>
 
-        <label
-            for="{{ $inputId }}"
-            class="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink"
-        >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-4" aria-hidden="true">
-                <path d="M4 7h11m0 0-3-3m3 3-3 3M20 17H9m0 0 3 3m-3-3 3-3" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            {{ __('analyzer.upload.replace') }}
-        </label>
     </div>
 
     <p id="{{ $inputId }}-hint" class="flex flex-col gap-1 text-xs text-ink-subtle">

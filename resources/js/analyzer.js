@@ -65,52 +65,6 @@ function formatPercent(locale, value) {
     return `${value.toFixed(1)}%`;
 }
 
-/**
- * Formats a Q-value for the current locale.
- */
-function formatQValue(locale, value) {
-    if (window.analyzerLocales?.numberFormatter) {
-        return window.analyzerLocales.numberFormatter.format(value);
-    }
-    return value.toFixed(3);
-}
-
-/**
- * Returns a friendly state label based on class and confidence band.
- */
-function getFriendlyStateLabel(className, band, locale) {
-    const key = `${className.toLowerCase()}_${band}`;
-    const translations = {
-        en: {
-            normal_high: 'NORMAL · high confidence',
-            normal_medium: 'NORMAL · medium confidence',
-            normal_low: 'NORMAL · low confidence',
-            pneumonia_high: 'PNEUMONIA · high confidence',
-            pneumonia_medium: 'PNEUMONIA · medium confidence',
-            pneumonia_low: 'PNEUMONIA · low confidence',
-        },
-        es: {
-            normal_high: 'NORMAL · confianza alta',
-            normal_medium: 'NORMAL · confianza media',
-            normal_low: 'NORMAL · confianza baja',
-            pneumonia_high: 'NEUMONÍA · confianza alta',
-            pneumonia_medium: 'NEUMONÍA · confianza media',
-            pneumonia_low: 'NEUMONÍA · confianza baja',
-        },
-    };
-    const lang = locale === 'es' ? 'es' : 'en';
-    return translations[lang][key] ?? `${className} · ${band}`;
-}
-
-/**
- * Returns context text based on predicted class.
- */
-function getContextText(className, locale) {
-    const key = className === 'NORMAL' ? 'context_normal' : 'context_pneumonia';
-    // The text is passed via data attributes on the result element
-    return '';
-}
-
 export function initAnalyzer(root) {
     const form = root.querySelector('[data-form]');
     const container = root.querySelector('[data-uploader]');
@@ -121,6 +75,7 @@ export function initAnalyzer(root) {
     const alertMessage = root.querySelector('[data-alert-message]');
     const status = root.querySelector('[data-status]');
     const result = root.querySelector('[data-result]');
+    const resultPlaceholder = root.querySelector('[data-result-placeholder]');
     const againButton = root.querySelector('[data-analyze-again]');
     const locale = document.documentElement.lang ?? 'en';
 
@@ -210,35 +165,21 @@ export function initAnalyzer(root) {
 
         result.querySelector('[data-model]').textContent = prediction.model;
 
-        for (const probability of prediction.probabilities) {
-            const row = result.querySelector(`[data-probability="${probability.class}"]`);
-
-            if (row === null) {
-                continue;
-            }
-
-            const percentageValue = probability.percentage;
-            row.querySelector('[data-percentage]').textContent = formatPercent(locale, percentageValue);
-
-            const fill = row.querySelector('[data-fill]');
-            fill.style.width = `${percentageValue}%`;
-            fill.dataset.tone = tones[probability.class] ?? 'neutral';
-
-            const bar = row.querySelector('[data-bar]');
-            bar.setAttribute('aria-valuenow', percentageValue);
-            bar.setAttribute('aria-valuetext', `${probability.class}: ${formatPercent(locale, percentageValue)}`);
+        if (resultPlaceholder !== null) {
+            resultPlaceholder.hidden = true;
         }
 
         result.hidden = false;
         setStatus(messages.completed.replace('%CLASS%', prediction.class));
-
-        // Announce result to screen readers
-        const announcement = `${prediction.class}, ${formatPercent(locale, Math.round(prediction.confidence * 1000) / 10)} confidence.`;
-        setStatus(announcement);
     };
 
     const resetResult = () => {
         result.hidden = true;
+
+        if (resultPlaceholder !== null) {
+            resultPlaceholder.hidden = false;
+        }
+
         recommendation.reset();
 
         const verdict = result.querySelector('[data-verdict]');
@@ -258,24 +199,6 @@ export function initAnalyzer(root) {
         if (confidenceMeter !== null) {
             confidenceMeter.setAttribute('aria-valuenow', '0');
             confidenceMeter.removeAttribute('aria-valuetext');
-        }
-
-        for (const row of result.querySelectorAll('[data-probability]')) {
-            row.querySelector('[data-percentage]').textContent = '—';
-
-            const fill = row.querySelector('[data-fill]');
-            fill.style.width = '0%';
-            fill.dataset.tone = 'neutral';
-
-            const bar = row.querySelector('[data-bar]');
-            bar.setAttribute('aria-valuenow', '0');
-            bar.removeAttribute('aria-valuetext');
-        }
-
-        // Close probabilities details
-        const details = result.querySelector('[data-probabilities-details]');
-        if (details !== null) {
-            details.open = false;
         }
     };
 

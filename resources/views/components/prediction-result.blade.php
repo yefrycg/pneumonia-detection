@@ -1,5 +1,3 @@
-@props(['classes' => ['NORMAL', 'PNEUMONIA']])
-
 <script>
     window.analyzerLocales = window.analyzerLocales || {};
     window.analyzerLocales.percentFormatter = new Intl.NumberFormat('{{ app()->getLocale() }}', {
@@ -14,8 +12,9 @@
     hidden
     class="flex flex-col gap-6 rounded-2xl border border-border bg-surface-raised p-5 shadow-panel sm:p-6"
 >
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-col gap-1.5">
         <h2 class="text-base font-semibold tracking-tight">{{ __('analyzer.result.heading') }}</h2>
+        <p class="text-sm text-ink-muted">{{ __('analyzer.result.subtitle') }}</p>
     </div>
 
     <div
@@ -79,58 +78,6 @@
             </div>
         </div>
     </div>
-
-    <details
-        data-probabilities-details
-        class="group"
-    >
-        <summary class="flex items-center justify-between gap-3 cursor-pointer rounded-lg border border-border bg-surface-sunken px-4 py-3 transition-colors hover:bg-surface-sunken/60 focus:outline-2 focus:outline-offset-2 focus:outline-accent">
-            <span class="text-xs font-medium tracking-wide text-ink-subtle uppercase">
-                {{ __('analyzer.result.probabilities') }}
-            </span>
-            <span
-                data-probabilities-toggle
-                class="flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-transform duration-200 group-open:rotate-180"
-            >
-                {{ __('analyzer.result.probabilities_collapsed') }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-4" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </span>
-        </summary>
-
-        <div
-            data-probabilities-content
-            class="overflow-hidden transition-[height,opacity] duration-300 ease-out"
-        >
-            <div class="flex flex-col gap-4 pt-4 border-t border-border">
-                @foreach ($classes as $class)
-                    <div data-probability="{{ $class }}" class="flex flex-col gap-1.5">
-                        <div class="flex items-baseline justify-between gap-3 text-sm">
-                            <span class="font-medium text-ink">{{ $class }}</span>
-                            <span data-percentage class="font-medium tabular-nums text-ink-muted">&mdash;</span>
-                        </div>
-
-                        <div
-                            data-bar
-                            role="progressbar"
-                            aria-valuemin="0"
-                            aria-valuemax="100"
-                            aria-valuenow="0"
-                            aria-label="{{ __('analyzer.progress.label', ['class' => $class, 'percentage' => 0]) }}"
-                            class="h-2 overflow-hidden rounded-full bg-surface-sunken"
-                        >
-                            <div
-                                data-fill
-                                style="width: 0%"
-                                class="h-full rounded-full bg-ink-subtle transition-[width] duration-500 ease-out data-[tone=positive]:bg-positive data-[tone=critical]:bg-critical"
-                            ></div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </details>
 
     <div class="flex flex-wrap items-center gap-3 border-t border-border pt-5">
         <button

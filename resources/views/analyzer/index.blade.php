@@ -30,7 +30,16 @@
                 </span>
             </div>
 
-            <p class="max-w-2xl text-lg text-ink-muted text-pretty">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full border border-border-strong bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-muted">
+                    {{ __('analyzer.model.cnn_badge', ['name' => config('inference.model.name')]) }}
+                </span>
+                <span class="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+                    {{ __('analyzer.model.llm_badge', ['version' => 'Qwen3-0.6B']) }}
+                </span>
+            </div>
+
+            <p class="max-w-4xl text-lg text-ink-muted text-pretty">
                 {{ __('analyzer.tagline') }}
             </p>
         </section>
@@ -55,9 +64,9 @@
             data-label-analyzing="{{ __('analyzer.analyzing') }}"
             data-label-unknown-dimensions="{{ __('analyzer.preview.unknown_dimensions') }}"
             data-tones="{{ json_encode($tones) }}"
-            class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start"
+            class="flex flex-col gap-6"
         >
-            <div class="flex flex-col gap-6 lg:order-1">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start">
                 <form
                     data-form
                     action="{{ $analysisEndpoint }}"
@@ -94,12 +103,33 @@
                     </button>
                 </form>
 
-                <x-prediction-result :classes="config('inference.classes')" />
+                <div class="flex flex-col gap-6">
+                    <div
+                        data-result-placeholder
+                        class="flex min-h-full flex-col gap-5 rounded-2xl border border-dashed border-border-strong bg-surface-raised/60 p-5 sm:p-6"
+                    >
+                        <div class="flex flex-col gap-1.5">
+                            <h2 class="text-base font-semibold tracking-tight">{{ __('analyzer.result.heading') }}</h2>
+                            <p class="text-sm text-ink-muted">{{ __('analyzer.result.subtitle') }}</p>
+                        </div>
+
+                        <div class="flex flex-1 flex-col items-center justify-center gap-3 rounded-xl bg-surface-sunken px-6 py-10 text-center">
+                            <span class="grid size-11 place-items-center rounded-full bg-accent/10 text-accent" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-5">
+                                    <path d="M4 6h16M4 12h10M4 18h7" stroke-linecap="round" />
+                                    <path d="m16.5 15.5 2 2 3.5-4" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <p class="max-w-xs text-sm font-medium text-ink">{{ __('analyzer.result.placeholder') }}</p>
+                            <p class="max-w-sm text-xs leading-relaxed text-ink-subtle">{{ __('analyzer.result.placeholder_hint') }}</p>
+                        </div>
+                    </div>
+
+                    <x-prediction-result />
+                </div>
             </div>
 
-            <div class="flex flex-col gap-4 lg:order-2">
-                <x-recommendation class="w-full" />
-            </div>
+            <x-recommendation class="w-full" />
 
             <p class="sr-only" role="status" aria-live="polite" data-status>{{ __('analyzer.accessibility.status_region') }}</p>
         </div>

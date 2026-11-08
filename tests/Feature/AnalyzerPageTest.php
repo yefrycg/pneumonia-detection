@@ -28,11 +28,10 @@ it('offers only the formats the server accepts', function () {
         ->assertSee('accept=".jpg,.jpeg,.png"', escape: false);
 });
 
-it('renders one probability row per configured class', function () {
+it('keeps the per-class probability table out of the result card', function () {
     $this->get(route('analyzer.index'))
         ->assertOk()
-        ->assertSee('data-probability="NORMAL"', escape: false)
-        ->assertSee('data-probability="PNEUMONIA"', escape: false);
+        ->assertDontSee('data-probability=', escape: false);
 });
 
 it('renders in the configured default locale', function () {
@@ -115,6 +114,7 @@ it('keeps every element the analyzer script looks up inside the analyzer root', 
         'data-alert-message',
         'data-status',
         'data-result',
+        'data-result-placeholder',
         'data-verdict',
         'data-class-label',
         'data-confidence',

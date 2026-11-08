@@ -29,15 +29,19 @@
     data-agent-unavailable="{{ __('analyzer.recommendation.agent.unavailable') }}"
     hidden
 >
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-base font-semibold tracking-tight">{{ __('analyzer.recommendation.heading') }}</h2>
+    <div class="flex flex-col gap-2 border-b border-border pb-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-base font-semibold tracking-tight">{{ __('analyzer.recommendation.heading') }}</h2>
 
-        <span
-            data-source-badge
-            data-source="llm"
-            hidden
-            class="rounded-full border border-border-strong bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-muted data-[source=llm]:border-accent/30 data-[source=llm]:bg-accent/10 data-[source=llm]:text-accent data-[source=fallback]:border-warning-ink/25 data-[source=fallback]:bg-warning-soft/60 data-[source=fallback]:text-warning-ink"
-        ></span>
+            <span
+                data-source-badge
+                data-source="llm"
+                hidden
+                class="rounded-full border border-border-strong bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-muted data-[source=llm]:border-accent/30 data-[source=llm]:bg-accent/10 data-[source=llm]:text-accent data-[source=fallback]:border-warning-ink/25 data-[source=fallback]:bg-warning-soft/60 data-[source=fallback]:text-warning-ink"
+            ></span>
+        </div>
+
+        <p class="text-sm text-ink-muted">{{ __('analyzer.recommendation.subtitle') }}</p>
     </div>
 
     <div data-recommendation-loading role="status" aria-live="polite" aria-busy="true" class="flex items-center gap-3 rounded-xl border border-border bg-surface-sunken p-4">
@@ -54,7 +58,7 @@
     </div>
 
     <div data-recommendation-content hidden class="flex flex-col gap-5">
-        <p data-recommendation-text class="text-base leading-relaxed text-ink text-pretty max-w-prose"></p>
+        <p data-recommendation-text class="text-base leading-relaxed text-ink text-pretty"></p>
 
         <div data-feedback-block class="flex flex-col gap-3 border-t border-border pt-5">
             <p class="text-sm font-medium text-ink">{{ __('analyzer.recommendation.feedback.prompt') }}</p>
@@ -88,34 +92,42 @@
             <p data-feedback-status role="status" aria-live="polite" class="text-sm text-ink-muted"></p>
         </div>
 
-        <details data-rl-details class="rounded-xl border border-border bg-surface-sunken p-4">
-            <summary class="cursor-pointer text-sm font-medium text-ink select-none flex items-center gap-2">
-                {{ __('analyzer.recommendation.agent.heading') }}
-                <span class="text-xs text-ink-subtle">({{ __('analyzer.recommendation.agent.summary') }})</span>
+        <details data-rl-details class="group overflow-hidden rounded-xl border border-border bg-surface-sunken">
+            <summary class="flex cursor-pointer items-start justify-between gap-4 p-4 transition-colors hover:bg-surface-sunken/60 focus:outline-2 focus:outline-offset-2 focus:outline-accent">
+                <span class="flex flex-col gap-1">
+                    <span class="text-xs font-medium tracking-wide text-ink-subtle uppercase">
+                        {{ __('analyzer.recommendation.agent.heading') }}
+                    </span>
+                    <span class="text-sm font-medium text-ink">
+                        {{ __('analyzer.recommendation.agent.summary') }}
+                    </span>
+                </span>
+
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="mt-0.5 size-4 shrink-0 text-ink-subtle transition-transform duration-200 group-open:rotate-180" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
             </summary>
 
-            <dl class="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                <dt class="text-ink-subtle">{{ __('analyzer.recommendation.agent.state') }}</dt>
-                <dd data-rl-state class="font-medium text-ink">—</dd>
+            <div class="flex flex-col gap-4 border-t border-border p-4">
+                <p data-rl-summary class="text-sm leading-relaxed text-ink-muted"></p>
 
-                <dt class="text-ink-subtle">{{ __('analyzer.recommendation.agent.action') }}</dt>
-                <dd data-rl-action class="font-medium text-ink">—</dd>
+                <div class="flex flex-col gap-1.5 rounded-xl border border-border bg-surface p-4">
+                    <p class="text-xs font-medium tracking-wide text-ink-subtle uppercase">
+                        {{ __('analyzer.recommendation.agent.chosen') }}
+                    </p>
+                    <p data-rl-action class="text-base font-medium text-ink">—</p>
+                    <p data-rl-hint class="text-sm leading-relaxed text-ink-muted"></p>
+                </div>
 
-                <dt class="text-ink-subtle">{{ __('analyzer.recommendation.agent.q_value') }}</dt>
-                <dd data-rl-q class="font-medium tabular-nums text-ink">—</dd>
-
-                <dt class="text-ink-subtle">{{ __('analyzer.recommendation.agent.mode') }}</dt>
-                <dd data-rl-mode class="font-medium text-ink">—</dd>
-
-                <dt class="text-ink-subtle">{{ __('analyzer.recommendation.agent.feedback_count') }}</dt>
-                <dd data-rl-count class="font-medium tabular-nums text-ink">—</dd>
-            </dl>
-
-            <div class="mt-4 flex flex-col gap-2 border-t border-border pt-4">
-                <p class="text-xs font-medium tracking-wide text-ink-subtle uppercase">
-                    {{ __('analyzer.recommendation.agent.ranking') }}
-                </p>
-                <ol data-rl-ranking class="flex flex-col gap-2 text-sm text-ink-muted"></ol>
+                <div class="flex flex-col gap-2 border-t border-border pt-4">
+                    <p class="text-xs font-medium tracking-wide text-ink-subtle uppercase">
+                        {{ __('analyzer.recommendation.agent.ranking') }}
+                    </p>
+                    <p class="text-xs leading-relaxed text-ink-subtle">
+                        {{ __('analyzer.recommendation.agent.ranking_hint') }}
+                    </p>
+                    <ol data-rl-ranking class="mt-1 flex flex-col gap-2 text-sm text-ink-muted"></ol>
+                </div>
             </div>
         </details>
     </div>
